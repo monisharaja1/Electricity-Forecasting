@@ -1,0 +1,131 @@
+{% extends "base.html" %}
+{% set active_page = "history" %}
+{% set title = "Prediction History" %}
+
+{% block content %}
+<section class="page-head">
+    <h1>History</h1>
+    <p>Review historical prediction records and monitor demand behavior over time.</p>
+</section>
+
+<section class="card">
+    <p class="section-badge"><i class="fa-solid fa-filter"></i> Data controls</p>
+    <h2>Controls</h2>
+    <p class="card-subtitle">Refresh persisted prediction history, add demo rows, or clear all stored records.</p>
+    <div class="stack-row">
+        <button id="hs_refresh" class="btn btn-primary" type="button"><i class="fa-solid fa-rotate"></i> Refresh History</button>
+        <button id="hs_load_demo" class="btn btn-outline" type="button"><i class="fa-solid fa-database"></i> Load Demo Data</button>
+        <button id="hs_clear" class="btn btn-outline" type="button"><i class="fa-solid fa-trash-can"></i> Clear</button>
+    </div>
+</section>
+
+<section class="grid-3">
+    <article class="card kpi kpi-blue">
+        <h3>Total Records</h3>
+        <p class="metric" id="hs_total">0</p>
+    </article>
+    <article class="card kpi kpi-violet">
+        <h3>Average Demand</h3>
+        <p class="metric" id="hs_avg">0 MW</p>
+    </article>
+    <article class="card kpi kpi-green">
+        <h3>Peak Demand</h3>
+        <p class="metric" id="hs_peak">0 MW</p>
+    </article>
+</section>
+
+<section class="card">
+    <p class="section-badge"><i class="fa-solid fa-clock-rotate-left"></i> Record stream</p>
+    <h2>Records</h2>
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>DateTime</th>
+                    <th>Predicted Demand (MW)</th>
+                </tr>
+            </thead>
+            <tbody id="hs_rows">
+                <tr><td colspan="3" class="muted">No records loaded.</td></tr>
+            </tbody>
+        </table>
+    </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let historyRows = [];
+const ui = window.SmartGridUI || {};
+
+function renderHistory() {
+    const body = document.getElementById("hs_rows");
+    const totalEl = document.getElementById("hs_total");
+    const avgEl = document.getElementById("hs_avg");
+    const peakEl = document.getElementById("hs_peak");
+
+    if (!historyRows.length) {
+        body.innerHTML = `<tr><td colspan="3" class="muted">No records loaded.</td></tr>`;
+        totalEl.textContent = "0";
+        avgEl.textContent = "0 MW";
+        peakEl.textContent = "0 MW";
+        return;
+    }
+
+    body.innerHTML = "";
+    historyRows.forEach((row, idx) => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `<td>${idx + 1}</td><td>${row.datetime}</td><td>${row.predicted_demand}</td>`;
+        body.appendChild(tr);
+    });
+
+    const values = historyRows.map((x) => Number(x.predicted_demand || 0));
+    totalEl.textContent = String(values.length);
+    avgEl.textContent = `${(values.reduce((a, b) => a + b, 0) / values.length).toFixed(2)} MW`;
+    peakEl.textContent = `${Math.max(...values).toFixed(2)} MW`;
+}
+
+function saveHistory() {
+}
+
+async function loadHistory() {
+    try {
+        const data = ui.requestJSON
+            ? await ui.requestJSON("/api/history?limit=300", { timeoutMs: 12000, retries: 1 })
+            : await (await fetch("/api/history?limit=300")).json();
+        historyRows = data.rows || [];
+        renderHistory();
+    } catch (err) {
+        if (ui.showToast) ui.showToast(err.message, "error");
+    }
+}
+
+document.getElementById("hs_load_demo").addEventListener("click", async () => {
+    const btn = document.getElementById("hs_load_demo");
+    if (ui.setBusy) ui.setBusy(btn, true, "Loading...");
+    try {
+        await fetch("/api/demo");
+        await loadHistory();
+        if (ui.showToast) ui.showToast("Demo data loaded", "success");
+    } finally {
+        if (ui.setBusy) ui.setBusy(btn, false);
+    }
+});
+
+document.getElementById("hs_clear").addEventListener("click", () => {
+    fetch("/api/history/clear", { method: "POST" })
+        .then(() => {
+            historyRows = [];
+            renderHistory();
+            if (ui.showToast) ui.showToast("History cleared", "success");
+        })
+        .catch((err) => {
+            if (ui.showToast) ui.showToast(err.message, "error");
+        });
+});
+
+document.getElementById("hs_refresh").addEventListener("click", loadHistory);
+document.addEventListener("DOMContentLoaded", loadHistory);
+</script>
+{% endblock %}
