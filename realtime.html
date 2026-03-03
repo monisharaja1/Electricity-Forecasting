@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+{% set active_page = "realtime" %}
+{% set title = "Realtime Prediction" %}
+
+{% block content %}
+<section class="page-head">
+    <h1>Realtime Prediction</h1>
+    <p>Submit the latest operating signals and get an immediate demand estimate.</p>
+</section>
+
+<section class="grid-3">
+    <article class="card">
+        <p class="section-badge"><i class="fa-solid fa-gauge-high"></i> Low latency</p>
+        <h3>Single-Shot Inference</h3>
+        <p>Use current context and lag features for immediate demand output.</p>
+    </article>
+    <article class="card">
+        <p class="section-badge"><i class="fa-solid fa-sliders"></i> Feature control</p>
+        <h3>Lag + Rolling Inputs</h3>
+        <p>Fine-tune inputs with hourly lag and rolling window statistics.</p>
+    </article>
+    <article class="card">
+        <p class="section-badge"><i class="fa-solid fa-shield-halved"></i> Reliable output</p>
+        <h3>Model Metadata</h3>
+        <p>Prediction response includes timestamp and model details for traceability.</p>
+    </article>
+</section>
+
+<section class="grid-2">
+    <article class="card">
+        <p class="section-badge"><i class="fa-solid fa-pen-to-square"></i> Input panel</p>
+        <h2>Prediction Form</h2>
+        <p class="card-subtitle">Fill the required fields and run a realtime calculation.</p>
+        <form id="realtimeForm" class="form">
+            <label>Date & Time
+                <input type="datetime-local" id="rt_datetime" required>
+            </label>
+            <label>Previous Hour Demand (MW)
+                <input type="number" id="rt_lag1" min="0" placeholder="Example: 1450">
+            </label>
+            <label>Previous Day Demand (MW)
+                <input type="number" id="rt_lag24" min="0" placeholder="Example: 1380">
+            </label>
+            <div class="grid-2">
+                <label>24h Rolling Mean
+                    <input type="number" id="rt_mean24" min="0" placeholder="Optional">
+                </label>
+                <label>24h Rolling Std Dev
+                    <input type="number" id="rt_std24" min="0" placeholder="Optional">
+                </label>
+            </div>
+            <button class="btn btn-primary" type="submit"><i class="fa-solid fa-bolt"></i> Predict Now</button>
+        </form>
+    </article>
+
+    <article class="card">
+        <p class="section-badge"><i class="fa-solid fa-chart-line"></i> Output panel</p>
+        <h2>Result</h2>
+        <p class="card-subtitle">Realtime prediction response appears below.</p>
+        <div id="rt_result" class="empty-state result-shell">No prediction yet.</div>
+    </article>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const dtInput = document.getElementById("rt_datetime");
+if (dtInput) {
+    const now = new Date();
+    now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+    dtInput.value = now.toISOString().slice(0, 16);
+}
+
+document.getElementById("realtimeForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const ui = window.SmartGridUI || {};
+    const submitBtn = e.target.querySelector("button[type='submit']");
+    const payload = {
+        datetime: document.getElementById("rt_datetime").value.replace("T", " "),
+        demand_lag_1: Number(document.getElementById("rt_lag1").value || 0),
+        demand_lag_24: Number(document.getElementById("rt_lag24").value || 0),
+        rolling_mean_24: Number(document.getElementById("rt_mean24").value || 0),
+        rolling_std_24: Number(document.getElementById("rt_std24").value || 0)
+    };
+
+    const box = document.getElementById("rt_result");
+    box.textContent = "Predicting...";
+    if (ui.setBusy) ui.setBusy(submitBtn, true, "Predicting...");
+
+    try {
+        let data;
+        if (ui.requestJSON) {
+            data = await ui.requestJSON("/api/predict", {
+                method: "POST",
+                retries: 1,
+                timeoutMs: 18000,
+                headers: {"Content-Type": "application/json"},
+                body: JSON.stringify(payload)
+            });
+        } else {
+            const res = await fetch("/api/predict", {
+                method: "POST",
+                headers: {"Content-Type": "application/json"},
+                body: JSON.stringify(payload)
+            });
+            data = await res.json();
+            if (!res.ok) throw new Error(data.error || "Prediction failed");
+        }
+
+        box.innerHTML = `
+            <div class="metric">${data.predicted_demand} MW</div>
+            <p><strong>Datetime:</strong> ${data.datetime}</p>
+            <p><strong>Model:</strong> ${data.model_name}</p>
+        `;
+        if (ui.showToast) ui.showToast("Prediction completed", "success");
+    } catch (err) {
+        box.innerHTML = `<p class="error">${err.message}</p>`;
+        if (ui.showToast) ui.showToast(err.message, "error");
+    } finally {
+        if (ui.setBusy) ui.setBusy(submitBtn, false);
+    }
+});
+</script>
+{% endblock %}
