@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+{% set active_page = "dashboard" %}
+{% set title = "Dashboard" %}
+
+{% block content %}
+<section class="page-head">
+    <h1>Dashboard</h1>
+    <p>Quick overview of API, model and recent demand levels.</p>
+</section>
+
+<section class="card">
+    <p class="section-badge"><i class="fa-solid fa-chart-column"></i> Operations view</p>
+    <h2>System Snapshot</h2>
+    <p class="card-subtitle">Live health, active model identity, and feature set visibility in one panel.</p>
+</section>
+
+<section class="grid-3">
+    <article class="card kpi kpi-blue">
+        <h3>API Status</h3>
+        <p id="db_health" class="metric">Checking...</p>
+    </article>
+    <article class="card kpi kpi-violet">
+        <h3>Model</h3>
+        <p id="db_model" class="metric">-</p>
+    </article>
+    <article class="card kpi kpi-green">
+        <h3>Feature Count</h3>
+        <p id="db_features" class="metric">-</p>
+    </article>
+</section>
+
+<section class="grid-3">
+    <article class="card kpi">
+        <h3>Model Version</h3>
+        <p id="db_version" class="metric">-</p>
+    </article>
+    <article class="card kpi">
+        <h3>MAE / RMSE</h3>
+        <p id="db_quality" class="metric">-</p>
+    </article>
+    <article class="card kpi">
+        <h3>Latency P95</h3>
+        <p id="db_p95" class="metric">-</p>
+    </article>
+</section>
+
+<section class="card">
+    <p class="section-badge"><i class="fa-solid fa-wave-square"></i> Demand analytics</p>
+    <h2>Demand Trend (24h)</h2>
+    <canvas id="db_chart" height="110"></canvas>
+</section>
+
+<section class="card">
+    <p class="section-badge"><i class="fa-solid fa-heart-pulse"></i> Monitoring</p>
+    <h2>Service Monitoring</h2>
+    <div class="grid-3">
+        <article class="card kpi kpi-blue">
+            <h3>Predict Calls</h3>
+            <p id="db_calls" class="metric">0</p>
+        </article>
+        <article class="card kpi kpi-violet">
+            <h3>Error Count</h3>
+            <p id="db_errors" class="metric">0</p>
+        </article>
+        <article class="card kpi kpi-green">
+            <h3>Drift Status</h3>
+            <p id="db_drift" class="metric">normal</p>
+        </article>
+    </div>
+</section>
+
+<section class="card">
+    <p class="section-badge"><i class="fa-solid fa-table"></i> Data table</p>
+    <h2>Last 24h Demo Demand</h2>
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>DateTime</th>
+                    <th>Predicted Demand (MW)</th>
+                </tr>
+            </thead>
+            <tbody id="db_rows">
+                <tr><td colspan="3" class="muted">Loading...</td></tr>
+            </tbody>
+        </table>
+    </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+{% endblock %}

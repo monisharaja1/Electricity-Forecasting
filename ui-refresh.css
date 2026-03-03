@@ -1,0 +1,183 @@
+/* Unified UX refresh layer for all pages */
+:root {
+  --ux-bg: #f4f6fb;
+  --ux-surface: #ffffff;
+  --ux-text: #1f2937;
+  --ux-muted: #6b7280;
+  --ux-border: #e5e7eb;
+  --ux-primary: #2563eb;
+  --ux-primary-strong: #1d4ed8;
+  --ux-success: #059669;
+  --ux-danger: #dc2626;
+  --ux-radius: 14px;
+}
+
+html,
+body {
+  background: var(--ux-bg) !important;
+  color: var(--ux-text) !important;
+}
+
+.container {
+  max-width: 1180px !important;
+}
+
+.navbar {
+  background: var(--ux-surface) !important;
+  color: var(--ux-text) !important;
+  border-bottom: 1px solid var(--ux-border);
+  box-shadow: 0 6px 24px rgba(15, 23, 42, 0.08) !important;
+}
+
+.nav-links a {
+  color: #334155 !important;
+}
+
+.nav-links a:hover,
+.nav-links a.active {
+  background: #eaf1ff !important;
+  color: var(--ux-primary-strong) !important;
+}
+
+.card,
+.card:hover,
+.card-header,
+.card-body {
+  background: var(--ux-surface) !important;
+  background-image: none !important;
+}
+
+.card {
+  border: 1px solid var(--ux-border) !important;
+  border-radius: var(--ux-radius) !important;
+  box-shadow: 0 10px 28px rgba(15, 23, 42, 0.08) !important;
+}
+
+.card::before,
+.card::after,
+.card-header::before,
+.card-header::after {
+  content: none !important;
+}
+
+.card-header {
+  border-bottom: 1px solid var(--ux-border) !important;
+}
+
+.btn {
+  border-radius: 10px !important;
+  font-weight: 600 !important;
+}
+
+.btn-primary {
+  background: var(--ux-primary) !important;
+  color: #fff !important;
+}
+
+.btn-primary:hover {
+  background: var(--ux-primary-strong) !important;
+}
+
+.btn-outline {
+  background: #fff !important;
+  border: 1px solid #cbd5e1 !important;
+  color: #0f172a !important;
+}
+
+input,
+select,
+textarea,
+.form-control,
+.form-input {
+  border: 1px solid #cbd5e1 !important;
+  border-radius: 10px !important;
+  background: #fff !important;
+  color: #111827 !important;
+  box-shadow: none !important;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease !important;
+}
+
+input:focus,
+select:focus,
+textarea:focus,
+.form-control:focus,
+.form-input:focus {
+  outline: none !important;
+  border-color: #60a5fa !important;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15) !important;
+}
+
+a,
+button,
+input,
+select,
+textarea {
+  -webkit-tap-highlight-color: transparent !important;
+}
+
+.form-help,
+.card-subtitle,
+.page-header p,
+small {
+  color: var(--ux-muted) !important;
+}
+
+.history-table th {
+  background: #f8fafc !important;
+}
+
+.history-table tr:hover {
+  background: #f8fbff !important;
+}
+
+.ux-toast {
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  z-index: 12000;
+  max-width: 360px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  color: #fff;
+  font-size: 0.92rem;
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.16);
+  animation: ux-toast-in 0.2s ease-out;
+}
+
+.ux-toast.info {
+  background: #2563eb;
+}
+
+.ux-toast.success {
+  background: var(--ux-success);
+}
+
+.ux-toast.error {
+  background: var(--ux-danger);
+}
+
+@keyframes ux-toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 768px) {
+  .container {
+    padding: 0 14px !important;
+  }
+
+  .page-header h1 {
+    font-size: 1.5rem !important;
+  }
+
+  .btn {
+    width: 100%;
+    justify-content: center;
+  }
+}
